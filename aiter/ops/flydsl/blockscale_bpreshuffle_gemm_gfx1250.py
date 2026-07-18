@@ -10,8 +10,6 @@ import re
 import torch
 from torch import Tensor
 
-from aiter.utility import dtypes
-
 _compile_blockscale_gemm = None
 _run_compiled = None
 _fx = None
@@ -38,6 +36,13 @@ def _lazy_import():
 
 
 def _require_e8m0_scale(scale: Tensor, shape: tuple[int, int], name: str) -> Tensor:
+    # Lazy import: importing aiter.utility.dtypes at module scope pulls in
+    # aiter.ops.enum, which instantiates a custom op that needs module_aiter_core
+    # loaded -- unavailable during setup.py's AOT collection, which imports this
+    # module only for parse_wmma_kernel_name. Defer to call time (runtime), where
+    # module_aiter_core exists. Mirrors gemm_kernels.py / moe_kernels.py.
+    from aiter.utility import dtypes
+
     if tuple(scale.shape) != shape:
         raise RuntimeError(
             f"[FlyDSL gfx1250 blockscale] {name} must have shape {shape}, "
