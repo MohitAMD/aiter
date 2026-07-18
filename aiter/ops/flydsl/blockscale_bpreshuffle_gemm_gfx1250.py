@@ -10,7 +10,7 @@ import re
 import torch
 from torch import Tensor
 
-from aiter import dtypes
+from aiter.utility import dtypes
 
 _compile_blockscale_gemm = None
 _run_compiled = None
